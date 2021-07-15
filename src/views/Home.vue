@@ -1,18 +1,173 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <div class="home-page">
+    <div class="hello-title">Hello TodoList</div>
+    <div class="description">
+      Todo. Todo. Todo. Todo. Todo. Todo. Todo..........
+    </div>
+    <Input @onComplated="refetch" />
+    <div class="content">
+      <div class="loading" v-if="loading">Loading....</div>
+      <template v-else>
+        <section class="left">
+          <div class="section-title">
+            <span>任务 🚗</span>
+            <span v-if="todo.length" class="total">
+              Total: 1
+            </span>
+          </div>
+          <div :class="['list', !todo.length && 'is-empty']">
+            <template v-if="todo.length">
+              <Item
+                v-for="i in todo"
+                :key="i.id"
+                :item="i"
+                @onTodoDeleted="createArchive(i)"
+              />
+            </template>
+            <div v-else>Empty.</div>
+          </div>
+        </section>
+        <section class="right">
+          <div class="section-title">
+            <span>
+              归档 👋
+            </span>
+            <span v-if="archive.length" class="total">
+              Total: {{ archive.length }}
+            </span>
+          </div>
+          <div :class="['list', !archive.length && 'is-empty']">
+            <template v-if="archive.length">
+              <Item
+                v-for="i in archive"
+                :key="i.id"
+                :item="i"
+                :isTodo="false"
+                @onArchiveDeleted="refetch"
+                @onBackArchive="refetch"
+              />
+            </template>
+            <div v-else>Empty.</div>
+          </div>
+        </section>
+      </template>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
+import { computed, defineComponent, ref } from "vue";
+import Input from "./components/Input.vue";
+import Item from "./components/Item.vue";
+import { getTodo } from "@/api/index";
+import { useQuery } from "@/components/hooks";
+
+type TodoItem = {
+  id: number;
+  title: string;
+  createTime: number;
+};
 
 export default defineComponent({
-  name: 'Home',
+  name: "Home",
   components: {
-    HelloWorld,
+    Input,
+    Item,
+  },
+
+  setup() {
+    const { data, loading } = useQuery(getTodo);
+    const todo = computed(() => data.value?.todo || []);
+
+    const archive = computed(() => data.value?.archive || []);
+
+    return {
+      todo,
+      archive,
+      loading,
+    };
   },
 });
 </script>
+
+<style scoped lang="scss">
+.home-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 40px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .hello-title {
+    font-size: 40px;
+    font-weight: 300;
+  }
+  .description {
+    font-size: 18px;
+    font-weight: 300;
+    color: #aaa;
+    margin-bottom: 50px;
+  }
+  .content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+
+    .loading {
+      font-size: 24px;
+      font-weight: 300;
+      width: 100%;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .left,
+    .right {
+      width: calc(50% - 20px);
+      /* flex-basis: 50%; */
+      display: flex;
+      flex-direction: column;
+    }
+    .left {
+      margin-right: 40px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+
+      .total {
+        font-size: 13px;
+        color: #aaa;
+        font-weight: 300;
+      }
+    }
+    .list {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 4px 0;
+      overflow-y: auto;
+
+      &.is-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #aaa;
+        font-size: 20px;
+      }
+
+      &:hover {
+        border-color: steelblue;
+      }
+    }
+  }
+}
+</style>
