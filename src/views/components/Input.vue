@@ -1,15 +1,37 @@
 <template>
-  <form class="input-container">
-    <input placeholder="记录点什么吧。" ref="input" />
+  <form class="input-container" @submit.prevent="onSubmit">
+    <input placeholder="记录点什么吧。" ref="input" v-focus />
     <div :class="['recording', !loading && 'hide']">记录中...</div>
   </form>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
+import { useMutation } from "@/common/hooks";
+import { createTodo } from "@/api/index";
 
 export default defineComponent({
   name: "Input",
+  emits: ["onComplated"],
+  setup(p: unknown, { emit }: { emit: (key: "onComplated") => void }) {
+    const input = ref<HTMLInputElement | null>(null);
+    const [trigger, { loading }] = useMutation(createTodo, {
+      onComplated() {
+        emit("onComplated");
+        if (input.value) {
+          input.value.value = "";
+        }
+      },
+    });
+
+    const onSubmit = () => {
+      if (input.value?.value && !loading.value) {
+        trigger(input.value.value);
+      }
+    };
+
+    return { input, onSubmit, loading };
+  },
 });
 </script>
 

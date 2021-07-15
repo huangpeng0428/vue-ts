@@ -70,9 +70,28 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { TodoItem } from "@/type";
+import { defineComponent, PropType, ref } from "vue";
 
-export default defineComponent({});
+export default defineComponent({
+  props: {
+    item: {
+      type: Object as PropType<TodoItem>,
+      require: true,
+    },
+    isTodo: {
+      type: Boolean,
+      default: true,
+    },
+  },
+
+  // setup(props, ctx) {
+  //   const title = ref("title");
+  //   return {
+  //     title,
+  //   };
+  // },
+});
 </script>
 
 <style scoped lang="scss">

@@ -12,7 +12,7 @@
           <div class="section-title">
             <span>任务 🚗</span>
             <span v-if="todo.length" class="total">
-              Total: 1
+              Total: {{todo.length}}
             </span>
           </div>
           <div :class="['list', !todo.length && 'is-empty']">
@@ -60,7 +60,7 @@ import { computed, defineComponent, ref } from "vue";
 import Input from "./components/Input.vue";
 import Item from "./components/Item.vue";
 import { getTodo } from "@/api/index";
-import { useQuery } from "@/components/hooks";
+import { useQuery } from "@/common/hooks";
 
 type TodoItem = {
   id: number;
@@ -76,7 +76,7 @@ export default defineComponent({
   },
 
   setup() {
-    const { data, loading } = useQuery(getTodo);
+    const { data, loading, refetch } = useQuery(getTodo);
     const todo = computed(() => data.value?.todo || []);
 
     const archive = computed(() => data.value?.archive || []);
@@ -84,6 +84,7 @@ export default defineComponent({
     return {
       todo,
       archive,
+      refetch,
       loading,
     };
   },
