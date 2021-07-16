@@ -59,8 +59,8 @@
 import { computed, defineComponent, ref } from "vue";
 import Input from "./components/Input.vue";
 import Item from "./components/Item.vue";
-import { getTodo } from "@/api/index";
-import { useQuery } from "@/common/hooks";
+import { getTodo, createArchive as createArchiveApi } from "@/api/index";
+import { useMutation, useQuery } from "@/common/hooks";
 
 type TodoItem = {
   id: number;
@@ -77,8 +77,10 @@ export default defineComponent({
 
   setup() {
     const { data, loading, refetch } = useQuery(getTodo);
+    const [createArchive] = useMutation(createArchiveApi, {
+      onComplated: refetch,
+    });
     const todo = computed(() => data.value?.todo || []);
-
     const archive = computed(() => data.value?.archive || []);
 
     return {
@@ -86,6 +88,7 @@ export default defineComponent({
       archive,
       refetch,
       loading,
+      createArchive,
     };
   },
 });

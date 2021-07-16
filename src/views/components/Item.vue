@@ -70,8 +70,122 @@
 </template>
 
 <script lang="ts">
+import { useMutation } from "@/common/hooks";
 import { TodoItem } from "@/type";
-import { defineComponent, PropType, ref } from "vue";
+import {
+  deleteTodo as deleteTodoApi,
+  deleteArchive as deleteArchiveApi,
+  updateTodo as updateTodoApi,
+  backArchive as backArchiveApi,
+} from "@/api";
+import { defineComponent, PropType, ref, toRefs } from "vue";
+
+type Props = Readonly<
+  {
+    isTodo: boolean;
+  } & {
+    item?: TodoItem | undefined;
+  }
+>;
+
+type Emit = (
+  event:
+    | "onTodoUpdated"
+    | "onTodoDeleted"
+    | "onArchiveDeleted"
+    | "onBackArchive",
+  ...args: unknown[]
+) => void;
+
+const useTodoItem = (props: Props, { emit }: { emit: Emit }) => {
+  const { item } = toRefs(props);
+  const isTodoDeleted = ref(false);
+  const isEditing = ref(false);
+  const editInput = ref<HTMLInputElement>();
+
+  //更新
+  const [updateTodo, { loading: updateTodoLoading }] =
+    useMutation(updateTodoApi);
+
+  //归到右边
+  const [deleteTodo, { loading: deleteTodoLoading }] = useMutation(
+    deleteTodoApi,
+    {
+      onComplated: () => {
+        isTodoDeleted.value = true;
+        emit("onTodoDeleted");
+      },
+    }
+  );
+
+  const onClickEdit = () => {
+    isEditing.value = true;
+  };
+
+  const onClickSave = () => {
+    const newValue = editInput.value?.value;
+
+    if (item?.value && newValue) {
+      if (item.value.title === newValue) {
+        isEditing.value = false;
+        return;
+      }
+      updateTodo(item.value.id, newValue);
+      isEditing.value = false;
+      item.value.title = newValue;
+    } else {
+      console.error("异常错误");
+      alert("待办项标题不可为空");
+    }
+  };
+
+  return {
+    isTodoDeleted,
+    isEditing,
+    updateTodo,
+    updateTodoLoading,
+    deleteTodo,
+    deleteTodoLoading,
+    editInput,
+    onClickEdit,
+    onClickSave,
+  };
+};
+
+const useArchive = (props: Props, { emit }: { emit: Emit }) => {
+  const isBacked = ref(false);
+  const isArchiveDeleted = ref(false);
+  //删除右边
+  const [deleteArchive, { loading: deleteArchiveLoading }] = useMutation(
+    deleteArchiveApi,
+    {
+      onComplated: () => {
+        isArchiveDeleted.value = true;
+        emit("onArchiveDeleted");
+      },
+    }
+  );
+  //回到左边
+  const [backArchive, { loading: backArchiveLoading }] = useMutation(
+    backArchiveApi,
+    {
+      onComplated: () => {
+        isBacked.value = true;
+        console.log(isBacked);
+        emit("onBackArchive");
+      },
+    }
+  );
+
+  return {
+    backArchiveLoading,
+    backArchive,
+    isBacked,
+    isArchiveDeleted,
+    deleteArchive,
+    deleteArchiveLoading,
+  };
+};
 
 export default defineComponent({
   props: {
@@ -84,13 +198,21 @@ export default defineComponent({
       default: true,
     },
   },
+  emits: [
+    "onTodoUpdated",
+    "onTodoDeleted",
+    "onArchiveDeleted",
+    "onBackArchive",
+  ],
 
-  // setup(props, ctx) {
-  //   const title = ref("title");
-  //   return {
-  //     title,
-  //   };
-  // },
+  setup(props, ctx) {
+    const todoResult = useTodoItem(props, ctx);
+    const archiveResult = useArchive(props, ctx);
+    return {
+      ...todoResult,
+      ...archiveResult,
+    };
+  },
 });
 </script>
 

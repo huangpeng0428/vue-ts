@@ -26,6 +26,7 @@ export default defineComponent({
 
     const onSubmit = () => {
       if (input.value?.value && !loading.value) {
+        console.log("input.value.value", input.value.value);
         trigger(input.value.value);
       }
     };
